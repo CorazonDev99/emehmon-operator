@@ -1,20 +1,22 @@
+import time
 import telebot
 import re
 import pandas as pd
-bot = telebot.TeleBot("6626124338:AAGXzVqsvYqjOq0PeRkipueDbc7UViQ15Bk")
 
+bot = telebot.TeleBot("6626124338:AAGXzVqsvYqjOq0PeRkipueDbc7UViQ15Bk")
 
 questions_file_path = 'questions.xlsx'
 
-df = pd.read_excel(questions_file_path)
-
-ADMIN_CHAT_ID = 668290718
+# Загружаем вопросы и ответы из Excel
+df = pd.read_excel(questions_file_path, usecols=[0, 1], names=["keywords", "response"])
 keywords_responses = list(df.itertuples(index=False, name=None))
 
-def reload_questions():
-    global questions_data
-    questions_data = pd.read_excel(questions_file_path)
+ADMIN_CHAT_ID = 668290718
 
+def reload_questions():
+    global keywords_responses
+    df = pd.read_excel(questions_file_path, usecols=[0, 1], names=["keywords", "response"])
+    keywords_responses = list(df.itertuples(index=False, name=None))
 
 @bot.message_handler(commands=['admin'])
 def handle_admin(message):
@@ -23,7 +25,6 @@ def handle_admin(message):
         bot.send_message(message.chat.id, "Iltimos, faylni o'zgartiring va savollarni yangilash uchun uni qayta yuklang.")
     else:
         bot.send_message(message.chat.id, "Siz ushbu buyruqqa kirish huquqiga ega emassiz.")
-
 
 @bot.message_handler(content_types=['document'])
 def handle_document(message):
@@ -42,14 +43,11 @@ def handle_document(message):
     else:
         return None
 
-
-
 @bot.message_handler(func=lambda message: True, content_types=['text'])
 def handle_text(message):
     response = generate_response(message.text)
     if response:
         bot.reply_to(message, response)
-
 
 def generate_response(question):
     for keywords, response in keywords_responses:
@@ -58,11 +56,11 @@ def generate_response(question):
             return response
     return None
 
-
-
-
-bot.polling(none_stop=True)
-
-
-
-
+while True:
+    try:
+        print("Бот запущен!")
+        bot.polling(none_stop=True)
+    except Exception as exp:
+        print(f'Произошла ошибка {exp.__class__.__name__}: {exp}')
+        bot.stop_polling()
+        time.sleep(5)
