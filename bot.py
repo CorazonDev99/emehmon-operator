@@ -45,8 +45,9 @@ def handle_document(message):
 
 @bot.message_handler(func=lambda message: True, content_types=['text'])
 def handle_text(message):
+    user_id = message.from_user.id
     response = generate_response(message.text)
-    if response:
+    if response and user_id not in [634660069, 1611458237, ]:
         bot.reply_to(message, response)
 
 def generate_response(question):
